@@ -1,0 +1,22 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      - PORT=3001
+      - GOOGLE_SHEET_ID=1Iev-QtQxM5WsPa7M7ISLoZCQI1_ASqQZ_znAvfGn8Dc
+    ports:
+      - "3001:3001"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    environment:
+      - VITE_BASE_URL=https://trip.rocadas.duckdns.org
+      - VITE_API_URL=https://trip.rocadas.duckdns.org
+    ports:
+      - "3002:80"
+    depends_on:
+      - backend
