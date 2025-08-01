@@ -5,7 +5,6 @@ import pluginReact from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
-import pluginQuery from '@tanstack/eslint-plugin-query';
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
@@ -15,7 +14,6 @@ export default [
     languageOptions: { ecmaVersion: 2020, globals: globals.browser },
     plugins: { 'react-hooks': reactHooks, 'react-refresh': reactRefresh }
   },
-  ...pluginQuery.configs['flat/recommended'],
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
   pluginReact.configs.flat.recommended,

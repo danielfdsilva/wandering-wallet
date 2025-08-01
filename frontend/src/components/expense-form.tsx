@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { FormEventHandler, useEffect, useState } from 'react';
 import { useAuth } from '../contexts/auth-context';
 import {
   Box,
@@ -13,12 +13,13 @@ import {
   Select,
   Portal
 } from '@chakra-ui/react';
-import { IoMdTrain } from 'react-icons/io';
+import { CreatableSelect, SingleValue } from 'chakra-react-select';
 import {
   MdHotel,
   MdRestaurant,
   MdLocalPlay,
-  MdAccountBalanceWallet
+  MdAccountBalanceWallet,
+  MdTrain
 } from 'react-icons/md';
 import { BiYen, BiEuro } from 'react-icons/bi';
 import { toaster } from './ui/toaster';
@@ -34,55 +35,105 @@ const defaultPeople = people.items.map((item) => item.value);
 const categories = [
   { id: 'Alojamento', label: 'Alojamento', icon: MdHotel },
   { id: 'Refeições', label: 'Refeições', icon: MdRestaurant },
-  { id: 'Lazer (museus e afins)', label: 'Lazer', icon: MdLocalPlay },
+  { id: 'Lazer', label: 'Lazer', icon: MdLocalPlay },
   { id: 'Pocket money', label: 'Pocket €', icon: MdAccountBalanceWallet },
-  { id: 'Transporte', label: 'Transporte', icon: IoMdTrain }
+  { id: 'Transporte', label: 'Transporte', icon: MdTrain }
 ];
 
 export default function ExpenseForm() {
   const { user } = useAuth();
+
+  const [categoryList, setCategoryList] = useState<
+    {
+      label: string;
+      value: string;
+    }[]
+  >([]);
+
+  useEffect(() => {
+    // Fetch categories from the API and set them in state
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/expenses/categories`,
+          {
+            headers: {
+              Authorization: `Bearer ${user?.token}`
+            }
+          }
+        );
+        if (!response.ok) {
+          throw new Error('Failed to fetch categories');
+        }
+        const data: string[] = await response.json();
+        const filteredCategories = data
+          .filter((cat) => !categories.some((c) => c.id === cat))
+          .map((cat) => ({
+            value: cat,
+            label: cat
+          }));
+
+        setCategoryList(filteredCategories);
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('Error fetching categories:', error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
   const [isSubmitting, setSubmitting] = useState(false);
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
-  const [customCategory, setCustomCategory] = useState('');
+  const [customCategory, setCustomCategory] = useState<{
+    label: string;
+    value: string;
+  } | null>(null);
   const [currency, setCurrency] = useState('yen');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [participants, setParticipants] = useState(defaultPeople);
 
-  const handleCategoryClick = (catId) => {
+  const handleCategoryClick = (catId: string) => {
     setCategory(catId);
-    setCustomCategory('');
+    setCustomCategory(null);
   };
 
-  const handleCustomCategoryChange = (e) => {
-    const value = e.target.value;
-    setCustomCategory(value);
-    if (value) {
+  const handleCustomCategoryChange = (
+    option: SingleValue<{ label: string; value: string }>
+  ) => {
+    setCustomCategory(option);
+    if (option) {
+      setCategory(option.label);
+    } else {
       setCategory('');
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit: FormEventHandler<HTMLDivElement> = async (e) => {
     if (isSubmitting) return; // Prevent multiple submissions
     e.preventDefault();
     setSubmitting(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/expenses`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        },
-        body: JSON.stringify({
-          amount: parseFloat(amount),
-          description,
-          category: customCategory || category,
-          date,
-          currency,
-          participants: participants.length === 2 ? 'Ambos' : participants[0]
-        })
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/expenses`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${user?.token}`
+          },
+          body: JSON.stringify({
+            amount: parseFloat(amount),
+            description,
+            category: customCategory || category,
+            date,
+            currency,
+            participants: participants.length === 2 ? 'Ambos' : participants[0]
+          })
+        }
+      );
 
       if (!response.ok) {
         throw new Error('Failed to submit expense');
@@ -93,22 +144,23 @@ export default function ExpenseForm() {
         description: 'Despesa adicionada com sucesso!',
         type: 'success',
         duration: 3000,
-        isClosable: true
+        closable: true
       });
       setAmount('');
       setDescription('');
       setCategory('');
-      setCustomCategory('');
+      setCustomCategory(null);
       setDate(new Date().toISOString().split('T')[0]);
       setParticipants(defaultPeople);
     } catch (error) {
-      console.error('Error:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error submitting expense:', error);
       toaster.create({
         title: 'Erro',
         description: 'Erro ao adicionar despesa. Tenta novamente.',
         type: 'error',
         duration: 3000,
-        isClosable: true
+        closable: true
       });
     } finally {
       setSubmitting(false);
@@ -118,8 +170,8 @@ export default function ExpenseForm() {
   return (
     <Box>
       <VStack gap={8} as='form' onSubmit={handleSubmit}>
-        <VStack required>
-          <HStack spacing={2} wrap='wrap' justify='center'>
+        <VStack>
+          <HStack gap={2} wrap='wrap' justify='center'>
             {categories.map((cat) => (
               <Button
                 key={cat.id}
@@ -139,21 +191,38 @@ export default function ExpenseForm() {
               </Button>
             ))}
           </HStack>
-          <InputGroup startAddon='Outra'>
-            <Input
-              type='text'
+          <InputGroup
+            startAddon='Outra'
+            css={{
+              '& [data-group-item]': customCategory
+                ? {
+                    bg: 'teal.600',
+                    color: 'white'
+                  }
+                : {}
+            }}
+          >
+            <CreatableSelect
               size='lg'
-              id='customCategory'
+              isClearable
+              menuPortalTarget={document.body}
+              selectedOptionColorPalette='teal'
+              chakraStyles={{
+                menu: (provided) => ({
+                  ...provided,
+                  zIndex: 100
+                })
+              }}
+              options={categoryList}
               value={customCategory}
               onChange={handleCustomCategoryChange}
-              placeholder='Define outra categoria'
             />
           </InputGroup>
         </VStack>
 
         <Field.Root>
           <Field.Label htmlFor='amount'>Valor</Field.Label>
-          <HStack spacing={2} width='full'>
+          <HStack gap={2} width='full'>
             <Input
               type='number'
               size='lg'
@@ -167,11 +236,11 @@ export default function ExpenseForm() {
               variant='outline'
               fontSize='1.5rem'
               size='lg'
-              onClick={() =>
+              onClick={() => {
                 setAmount((prev) =>
-                  prev ? ((parseFloat(prev) * 2) / 3).toFixed(2) : ''
-                )
-              }
+                  prev ? (parseFloat(prev) * (2 / 3)).toFixed(2) : ''
+                );
+              }}
             >
               ⅔
             </Button>
@@ -184,9 +253,9 @@ export default function ExpenseForm() {
             <SegmentGroup.Root
               size='lg'
               value={currency}
-              onValueChange={(e) => setCurrency(e.value)}
+              onValueChange={(e) => setCurrency(e.value!)}
             >
-              <SegmentGroup.Indicator bg='teal.500' />
+              <SegmentGroup.Indicator bg='teal.600' />
               <SegmentGroup.Item value='yen'>
                 <SegmentGroup.ItemText
                   color={currency === 'yen' ? 'white' : undefined}
@@ -208,7 +277,7 @@ export default function ExpenseForm() {
 
           <Field.Root>
             <Field.Label htmlFor='date'>Date</Field.Label>
-            <HStack spacing={2} width='full'>
+            <HStack gap={2} width='full'>
               <Input
                 type='date'
                 size='lg'
