@@ -1,12 +1,68 @@
-# React + Vite
+# Wandering Wallet Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is the React + Vite frontend for Wandering Wallet, a web application to track trip expenses with Google authentication and Google Sheets integration.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Google OAuth 2.0 authentication
+- Expense entry form with amount and description
+- Real-time feedback on submission status
+- Connects to a Node.js backend for Google Sheets integration
 
-## Expanding the ESLint configuration
+## Prerequisites
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- Node.js v24 or higher
+- The backend server running (see root README for backend setup)
+- Google OAuth 2.0 Client ID
+
+## Setup
+
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+2. Create a `.env` file from the example:
+   ```bash
+   cp .env.example .env
+   ```
+
+3. Update `.env` with your configuration:
+   ```
+   VITE_API_URL=http://localhost:3001
+   ```
+
+## Running the Frontend
+
+Start the development server:
+```bash
+npm run dev
+```
+The app will be available at [http://localhost:5173](http://localhost:5173).
+
+## Deployment
+
+You can build the frontend for production:
+```bash
+npm run build
+```
+The output will be in the `dist/` directory.
+
+### Docker
+
+A Dockerfile is provided for containerized builds. See the root README for Docker usage.
+
+## Technologies Used
+
+- React
+- Vite
+- Chakra UI
+- Google OAuth 2.0
+
+## Project Structure
+
+- `src/components/` – React components
+- `src/contexts/` – React context providers
+- `src/styles/` – Theme and styles
+
+For backend setup and full-stack deployment, refer to the main [README.md](../README.md).

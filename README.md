@@ -1,5 +1,7 @@
 # Wandering Wallet
 
+![](./frontend/public/meta/meta.png)
+
 A web application to track trip expenses using a React frontend and Node.js backend, with automatic storage to Google Sheets.
 
 ## Features
@@ -15,17 +17,7 @@ A web application to track trip expenses using a React frontend and Node.js back
 ```
 trip-expenses/
 ├── frontend/           # React + Vite frontend
-│   ├── src/
-│   │   ├── components/
-│   │   │   └── expense-form.jsx
-│   │   ├── app.jsx
-│   │   ├── app.css
-│   │   └── main.jsx
-│   └── package.json
 ├── backend/           # Node.js + Express backend
-│   ├── server.js
-│   ├── package.json
-│   └── .env
 └── Dockerfile         # Multi-stage Docker build file
 ```
 
@@ -76,11 +68,6 @@ If you don't use nvm, ensure you have Node.js 24 or higher installed manually.
    - Add your application's redirect URI (e.g., http://localhost:5173 for development)
    - Note down the Client ID
 
-2. Configure Authorized Users:
-   - The application is configured to only allow access to specific email addresses
-   - Currently authorized: danielfdsilva@gmail.com
-   - To modify the allowed emails, update the ALLOWED_EMAILS array in `backend/middleware/auth.js`
-
 ### 2. Backend Setup
 
 1. Navigate to the backend directory:
@@ -93,19 +80,30 @@ If you don't use nvm, ensure you have Node.js 24 or higher installed manually.
    npm install
    ```
 
-3. Create `.env` file from example:
+3. Create a configuration file:
+   - Copy `app-config-example.json` to `app-config.json`
+   - Edit `app-config.json` to set your Google Sheet ID, allowed emails, and other settings
+
+4. Prepare your Google Service Account credentials file (downloaded from Google Cloud Console).
+
+5. Create a `.env` file from the example:
    ```bash
    cp example.env .env
    ```
 
-4. Update `.env` with your Google credentials:
+6. Edit `.env` to set the following variables (use file paths for config and credentials):
    ```
    PORT=3001
-   GOOGLE_SHEET_ID=your_sheet_id_here
-   GOOGLE_SERVICE_ACCOUNT_EMAIL=your_service_account_email
-   GOOGLE_PRIVATE_KEY="your_private_key_here"
+   APP_CONFIG_PATH=./app-config.json
+   GOOGLE_SERVICE_ACCOUNT_JSON=./client_secret_xxx.json
    GOOGLE_CLIENT_ID=your_oauth_client_id_here
    ```
+
+   - `APP_CONFIG_PATH`: Path to your backend config file (e.g., `./app-config.json`)
+   - `GOOGLE_SERVICE_ACCOUNT_JSON`: Path to your Google service account JSON file
+   - `GOOGLE_CLIENT_ID`: Your OAuth 2.0 Client ID
+
+For more details, see [backend/README.md](backend/README.md).
 
 ### 3. Frontend Setup
 
@@ -127,7 +125,6 @@ If you don't use nvm, ensure you have Node.js 24 or higher installed manually.
 4. Update `.env` with your configuration:
    ```
    VITE_API_URL=http://localhost:3001
-   VITE_GOOGLE_CLIENT_ID=your_oauth_client_id_here
    ```
 
 ## Running the Application
@@ -147,7 +144,7 @@ If you don't use nvm, ensure you have Node.js 24 or higher installed manually.
 
 ## Usage
 
-1. Sign in with your Google account (must be danielfdsilva@gmail.com)
+1. Sign in with your Google account (must be one of the allowed emails in your config)
 2. Enter the expense amount in the "Amount" field
 2. Provide a description for the expense
 3. Click "Add Expense" to submit
@@ -159,36 +156,39 @@ If you don't use nvm, ensure you have Node.js 24 or higher installed manually.
 - Frontend development server runs on port 5173
 - Hot reload is enabled for both frontend and backend
 
-## Docker Deployment
+## Docker Compose Deployment
 
-You can run the entire application using Docker:
+You can run the entire application using Docker Compose.
 
-1. Build the Docker image:
+1. Make sure you have the following files in the backend directory:
+   - `app-config.json` (your backend configuration)
+   - `client_secret.json` (your Google service account credentials)
+
+2. Edit `docker-compose.yml` to set your actual `GOOGLE_CLIENT_ID` in the backend environment section.
+
+3. Start the services:
    ```bash
-   docker build -t trip-expenses .
+   docker compose up --build
    ```
 
-2. Run the container:
-   ```bash
-   docker run -p 3001:3001 \
-     -e PORT=3001 \
-     -e GOOGLE_SHEET_ID=your_sheet_id \
-     -e GOOGLE_SERVICE_ACCOUNT_EMAIL=your_service_account_email \
-     -e GOOGLE_PRIVATE_KEY="your_private_key" \
-     -e GOOGLE_CLIENT_ID=your_oauth_client_id \
-     trip-expenses
-   ```
+- The backend will be available at `http://localhost:3001`
+- The frontend will be available at `http://localhost:3000`
 
-The application will be available at `http://localhost:3001`.
+The backend service mounts `app-config.json` and `client_secret.json` as read-only volumes and uses environment variables for configuration.
 
 ### Environment Variables
 
-When running with Docker, pass all required environment variables using the `-e` flag:
+The backend service uses:
 - `PORT`: The port to run the server (default: 3001)
-- `GOOGLE_SHEET_ID`: Your Google Sheet ID
-- `GOOGLE_SERVICE_ACCOUNT_EMAIL`: Your service account email
-- `GOOGLE_PRIVATE_KEY`: Your service account private key
+- `APP_CONFIG_PATH`: Path to your backend config file (e.g., `/app/app-config.json`)
+- `GOOGLE_SERVICE_ACCOUNT_JSON`: Path to your Google service account JSON file (e.g., `/app/client_secret.json`)
 - `GOOGLE_CLIENT_ID`: Your OAuth 2.0 Client ID
+
+For custom deployments or advanced usage, you can still use Docker directly as described below.
+
+## Docker Deployment
+
+You can also run the backend or frontend individually using Docker. See the `docker-compose.yml` and service Dockerfiles for details.
 
 ## Technologies Used
 
