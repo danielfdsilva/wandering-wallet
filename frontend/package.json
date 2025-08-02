@@ -1,8 +1,15 @@
 {
   "name": "wandering-wallet-frontend",
-  "private": true,
+  "description": "Frontend for the Wandering Wallet application, a trip expenses tracker.",
   "version": "1.0.0",
+  "private": true,
   "type": "module",
+  "license": "MIT",
+  "author": "Daniel da Silva",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/danielfdsilva/wandering-wallet"
+  },
   "engines": {
     "node": ">=24.0.0"
   },

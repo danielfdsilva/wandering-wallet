@@ -1,4 +1,5 @@
 # Wandering Wallet
+_v1.0.0_
 
 ![](./frontend/public/meta/meta.png)
 

@@ -1,17 +1,20 @@
 {
   "name": "wandering-wallet-backend",
+  "description": "Backend for the Wandering Wallet application, a trip expenses tracker.",
+  "private": true,
   "version": "1.0.0",
-  "description": "",
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "lint": "eslint .",
     "start": "node server.js",
     "dev": "node --watch server.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Daniel da Silva",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/danielfdsilva/wandering-wallet"
+  },
+  "license": "MIT",
   "engines": {
     "node": ">=24.0.0"
   },
