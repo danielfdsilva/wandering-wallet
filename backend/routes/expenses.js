@@ -1,8 +1,11 @@
 // backend/routes/expenses.js
 import express from 'express';
 import { authenticateToken } from '../middleware/auth.js';
+import { initConfig } from '../config.js';
 
 const router = express.Router();
+
+const { googleServiceAccountData } = await initConfig();
 
 export default (doc) => {
   const docCategories = new Set();
@@ -11,8 +14,24 @@ export default (doc) => {
       await doc.loadInfo();
       const sheet = doc.sheetsByIndex[0];
       const cells = await sheet.getCellsInRange('B2:B1000');
-      cells.forEach((cell) => docCategories.add(cell[0]));
+      (cells || []).flat().forEach((cell) => docCategories.add(cell));
     } catch (error) {
+      if (error.message.includes('The caller does not have permission')) {
+        console.log('\nUnauthorized access to Google Sheet.');
+        console.log(
+          'Make sure the Google Service Account bot has the needed access.'
+        );
+        console.log('Share the Sheet with:');
+        console.log('');
+        console.log('  Bot email:', googleServiceAccountData.client_email);
+        console.log(
+          '  Sheet URL:',
+          `https://docs.google.com/spreadsheets/d/${process.env.GOOGLE_SHEET_ID}`,
+          '\n'
+        );
+
+        process.exit(1);
+      }
       console.error('Error refreshing categories:', error);
     }
   };
