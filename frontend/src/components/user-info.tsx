@@ -12,7 +12,14 @@ export function UserInfo() {
   return (
     <Drawer.Root size='xs'>
       <Drawer.Trigger asChild>
-        <Button variant='ghost'>
+        <Button
+          variant='ghost'
+          color='white'
+          mr={-4}
+          _hover={{
+            bg: 'whiteAlpha.300'
+          }}
+        >
           {auth.user.name}
           <Avatar.Root size='xs' colorPalette='secondary'>
             <Avatar.Fallback name={auth.user.name} />

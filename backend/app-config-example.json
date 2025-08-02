@@ -1,0 +1,23 @@
+// This file is an example configuration for the backend application.
+// Comments are not allowed in JSON files, so remove them before using this file.
+{
+  // The participant name will be used in the "participants" dropdown.
+  // The email is to allow access to the app. Must be Google email.
+  "participants": [
+    {
+      "name": "User",
+      "email": "user@gmail.com"
+    }
+  ],
+  // If no currency is provided it defaults to EUR.
+  "currencies": [
+    "EUR",
+    "USD"
+  ],
+  // Renders buttons to split the bill.
+  // Only 1/2, 2/3 and 2/5 are supported.
+  "splits": [
+    "2/3",
+    "2/5"
+  ]
+}

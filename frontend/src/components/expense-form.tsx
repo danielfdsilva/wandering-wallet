@@ -1,4 +1,4 @@
-import { FormEventHandler, useEffect, useState } from 'react';
+import { FormEventHandler, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../contexts/auth-context';
 import {
   Box,
@@ -21,16 +21,31 @@ import {
   MdAccountBalanceWallet,
   MdTrain
 } from 'react-icons/md';
-import { BiYen, BiEuro } from 'react-icons/bi';
+import { BiYen, BiEuro, BiDollar, BiPound } from 'react-icons/bi';
 import { toaster } from './ui/toaster';
+import { useSetup } from '../contexts/setup-context';
 
-const people = createListCollection({
-  items: [
-    { label: 'Daniel', value: 'Daniel' },
-    { label: 'Sílvia', value: 'Sílvia' }
-  ]
-});
-const defaultPeople = people.items.map((item) => item.value);
+const currencyIconMap = {
+  yen: <BiYen />,
+  eur: <BiEuro />,
+  usd: <BiDollar />,
+  gbp: <BiPound />
+};
+
+const splitsMap = {
+  '1/2': {
+    value: 0.5,
+    fraction: '½'
+  },
+  '2/3': {
+    value: 2 / 3,
+    fraction: '⅔'
+  },
+  '2/5': {
+    value: 2 / 5,
+    fraction: '⅖'
+  }
+};
 
 const categories = [
   { id: 'Alojamento', label: 'Alojamento', icon: MdHotel },
@@ -42,6 +57,22 @@ const categories = [
 
 export default function ExpenseForm() {
   const { user } = useAuth();
+  const setupInfo = useSetup();
+
+  const validSplits = setupInfo.splits.filter(
+    (split) => !!splitsMap[split as keyof typeof splitsMap]
+  );
+
+  const { people, defaultPeople } = useMemo(() => {
+    const people = createListCollection({
+      items: setupInfo.participants.map((participant) => ({
+        label: participant,
+        value: participant
+      }))
+    });
+    const defaultPeople = people.items.map((item) => item.value);
+    return { people, defaultPeople };
+  }, [setupInfo.participants]);
 
   const [categoryList, setCategoryList] = useState<
     {
@@ -91,7 +122,7 @@ export default function ExpenseForm() {
     label: string;
     value: string;
   } | null>(null);
-  const [currency, setCurrency] = useState('yen');
+  const [currency, setCurrency] = useState(setupInfo.currencies[0] || 'eur');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [participants, setParticipants] = useState(defaultPeople);
 
@@ -129,8 +160,11 @@ export default function ExpenseForm() {
             description,
             category: customCategory || category,
             date,
-            currency,
-            participants: participants.length === 2 ? 'Ambos' : participants[0]
+            currency: currency.toLowerCase(),
+            participants:
+              participants.length === setupInfo.participants.length
+                ? 'Ambos'
+                : participants[0]
           })
         }
       );
@@ -222,58 +256,71 @@ export default function ExpenseForm() {
 
         <Field.Root>
           <Field.Label htmlFor='amount'>Valor</Field.Label>
-          <HStack gap={2} width='full'>
-            <Input
-              type='number'
-              size='lg'
-              id='amount'
-              step='0.01'
-              value={amount?.toString()}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder='Valor despesa'
-            />
-            <Button
-              variant='outline'
-              fontSize='1.5rem'
-              size='lg'
-              onClick={() => {
-                setAmount((prev) =>
-                  prev ? (parseFloat(prev) * (2 / 3)).toFixed(2) : ''
-                );
-              }}
-            >
-              ⅔
-            </Button>
-          </HStack>
+          {!!validSplits && (
+            <HStack gap={2} width='full'>
+              <Input
+                type='number'
+                size='lg'
+                id='amount'
+                step='0.01'
+                value={amount?.toString()}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder='Valor despesa'
+              />
+              {validSplits.map((split) => (
+                <Button
+                  key={split}
+                  variant='outline'
+                  fontSize='1.5rem'
+                  size='lg'
+                  onClick={() => {
+                    setAmount((prev) =>
+                      prev
+                        ? (
+                            parseFloat(prev) *
+                            splitsMap[split as keyof typeof splitsMap].value
+                          ).toFixed(2)
+                        : ''
+                    );
+                  }}
+                >
+                  {splitsMap[split as keyof typeof splitsMap].fraction}
+                </Button>
+              ))}
+            </HStack>
+          )}
         </Field.Root>
 
         <HStack width='full'>
-          <Field.Root>
-            <Field.Label htmlFor='currency'>Currency</Field.Label>
-            <SegmentGroup.Root
-              size='lg'
-              value={currency}
-              onValueChange={(e) => setCurrency(e.value!)}
-            >
-              <SegmentGroup.Indicator bg='teal.600' />
-              <SegmentGroup.Item value='yen'>
-                <SegmentGroup.ItemText
-                  color={currency === 'yen' ? 'white' : undefined}
-                >
-                  <BiYen />
-                </SegmentGroup.ItemText>
-                <SegmentGroup.ItemHiddenInput />
-              </SegmentGroup.Item>
-              <SegmentGroup.Item value='eur'>
-                <SegmentGroup.ItemText
-                  color={currency === 'eur' ? 'white' : undefined}
-                >
-                  <BiEuro />
-                </SegmentGroup.ItemText>
-                <SegmentGroup.ItemHiddenInput />
-              </SegmentGroup.Item>
-            </SegmentGroup.Root>
-          </Field.Root>
+          {setupInfo.currencies.length > 1 && (
+            <Field.Root>
+              <Field.Label htmlFor='currency'>Currency</Field.Label>
+              <SegmentGroup.Root
+                size='lg'
+                value={currency}
+                onValueChange={(e) => setCurrency(e.value!)}
+              >
+                <SegmentGroup.Indicator bg='teal.600' />
+                {setupInfo.currencies.map((curr) => (
+                  <SegmentGroup.Item
+                    key={curr}
+                    value={curr}
+                    color={currency === curr ? 'white' : undefined}
+                  >
+                    <SegmentGroup.ItemText>
+                      {
+                        // @ts-expect-error accessing icon from currencyIconMap
+                        currencyIconMap[curr.toLowerCase()] || (
+                          <span>{curr.toUpperCase()}</span>
+                        )
+                      }
+                    </SegmentGroup.ItemText>
+                    <SegmentGroup.ItemHiddenInput />
+                  </SegmentGroup.Item>
+                ))}
+              </SegmentGroup.Root>
+            </Field.Root>
+          )}
 
           <Field.Root>
             <Field.Label htmlFor='date'>Date</Field.Label>

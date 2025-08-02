@@ -1,21 +1,16 @@
+import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
-import { readFile } from 'fs/promises';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
 
 import authRoutes from './routes/auth.js';
 import createExpensesRouter from './routes/expenses.js';
+import { initConfig } from './config.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+dotenv.config();
 
-const creds = JSON.parse(
-  await readFile(join(__dirname, './trip-expenses-57b012e0ba05.json'), 'utf8')
-);
+const { googleServiceAccountData, appConfigData } = await initConfig();
 
 const SCOPES = [
   'https://www.googleapis.com/auth/spreadsheets',
@@ -23,12 +18,10 @@ const SCOPES = [
 ];
 
 const jwt = new JWT({
-  email: creds.client_email,
-  key: creds.private_key,
+  email: googleServiceAccountData.client_email,
+  key: googleServiceAccountData.private_key,
   scopes: SCOPES
 });
-
-dotenv.config();
 
 // Initialize Google Sheets document
 const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEET_ID, jwt);
@@ -37,6 +30,21 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Setup route
+app.get('/api/setup', async (req, res) => {
+  try {
+    res.status(200).json({
+      googleClientId: process.env.GOOGLE_CLIENT_ID,
+      participants: appConfigData.participants.map((p) => p.name),
+      tripName: doc.title,
+      currencies: appConfigData.currencies,
+      splits: appConfigData.splits
+    });
+  } catch (error) {
+    console.error('Error setting up application:', error);
+    res.status(500).json({ error: 'Failed to setup application' });
+  }
+});
 // Auth routes
 app.use('/api/auth', authRoutes);
 // Expenses routes
