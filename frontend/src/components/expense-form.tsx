@@ -158,7 +158,7 @@ export default function ExpenseForm() {
           body: JSON.stringify({
             amount: parseFloat(amount),
             description,
-            category: customCategory || category,
+            category: customCategory?.value || category,
             date,
             currency: currency.toLowerCase(),
             participants:
