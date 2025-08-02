@@ -4,6 +4,13 @@
 
 A web application to track trip expenses using a React frontend and Node.js backend, with automatic storage to Google Sheets.
 
+> [!IMPORTANT]  
+> The app is in Portuguese and requires the google sheet fields to be in Portuguese as well.
+
+## Motivation
+
+While planning a trip with my partner, we needed a simple way to keep track of our shared expenses. This app was created to make it easy to log every expense as it happens, with seamless integration to Google Sheets for straightforward analysis. By centralizing our spending data, we can always see if we're staying on budget and understand exactly how much we've spent and on what.
+
 ## Features
 
 - Google Authentication with email restriction
