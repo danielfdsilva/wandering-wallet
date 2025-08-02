@@ -26,7 +26,7 @@ import { toaster } from './ui/toaster';
 import { useSetup } from '../contexts/setup-context';
 
 const currencyIconMap = {
-  yen: <BiYen />,
+  jpy: <BiYen />,
   eur: <BiEuro />,
   usd: <BiDollar />,
   gbp: <BiPound />
