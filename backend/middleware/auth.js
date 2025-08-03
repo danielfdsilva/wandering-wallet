@@ -1,4 +1,7 @@
-const ALLOWED_EMAILS = ['danielfdsilva@gmail.com'];
+import { initConfig } from '../config.js';
+
+const { appConfigData } = await initConfig();
+const allowedEmails = appConfigData.participants.map(p => p.email);
 
 class StatusError extends Error {
   constructor(status, message) {
@@ -28,7 +31,7 @@ export const verifyToken = async (token) => {
 
   const userInfo = await userInfoRes.json();
 
-  if (!ALLOWED_EMAILS.includes(userInfo.email)) {
+  if (!allowedEmails.includes(userInfo.email)) {
     throw new StatusError(403, 'Email not authorized');
   }
 
