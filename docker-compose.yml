@@ -5,23 +5,25 @@ services:
       dockerfile: Dockerfile
     environment:
       - PORT=3001
-      - APP_CONFIG_PATH=/app/app-config.json
-      - GOOGLE_SERVICE_ACCOUNT_JSON=/app/client_secret.json
+      - APP_CONFIG_PATH=./app-config.json
+      - GOOGLE_SERVICE_ACCOUNT_JSON=./client_secret.json
       - GOOGLE_CLIENT_ID=your_oauth_client_id_here
     volumes:
       - ./backend/app-config.json:/app/app-config.json:ro
       - ./backend/client_secret.json:/app/client_secret.json:ro
     ports:
       - "3001:3001"
+    restart: unless-stopped
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    environment:
-      - VITE_BASE_URL=https://trip.rocadas.duckdns.org
-      - VITE_API_URL=https://trip.rocadas.duckdns.org
+      args:
+        - VITE_BASE_URL=https://url.com
+        - VITE_API_URL=https://url.com
     ports:
       - "3000:80"
     depends_on:
       - backend
+    restart: unless-stopped

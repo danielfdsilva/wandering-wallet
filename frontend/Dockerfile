@@ -1,6 +1,9 @@
 # Build stage
 FROM node:24-alpine as builder
 
+ARG VITE_API_URL
+ARG VITE_BASE_URL
+
 WORKDIR /app
 
 # Install dependencies
