@@ -6,7 +6,6 @@ This is the React + Vite frontend for Wandering Wallet, a web application to tra
 
 - Google OAuth 2.0 authentication
 - Expense entry form with amount and description
-- Real-time feedback on submission status
 - Connects to a Node.js backend for Google Sheets integration
 
 ## Prerequisites
@@ -51,13 +50,6 @@ The output will be in the `dist/` directory.
 ### Docker
 
 A Dockerfile is provided for containerized builds. See the root README for Docker usage.
-
-## Technologies Used
-
-- React
-- Vite
-- Chakra UI
-- Google OAuth 2.0
 
 ## Project Structure
 

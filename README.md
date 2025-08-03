@@ -15,10 +15,8 @@ While planning a trip with my partner, we needed a simple way to keep track of o
 ## Features
 
 - Google Authentication with email restriction
-- Simple expense entry form with amount and description
-- Automatic timestamp recording
+- Simple expense entry form with category, amount and description
 - Direct integration with Google Sheets
-- Real-time feedback on submission status
 
 ## Project Structure
 
@@ -197,22 +195,3 @@ For custom deployments or advanced usage, you can still use Docker directly as d
 ## Docker Deployment
 
 You can also run the backend or frontend individually using Docker. See the `docker-compose.yml` and service Dockerfiles for details.
-
-## Technologies Used
-
-- Frontend:
-  - React
-  - Vite
-  - Chakra UI
-  - Google OAuth 2.0
-
-- Backend:
-  - Node.js
-  - Express
-  - google-spreadsheet
-  - dotenv
-  - cors
-
-- Deployment:
-  - Docker
-  - Multi-stage builds
