@@ -173,6 +173,13 @@ export default function ExpenseForm() {
         throw new Error('Failed to submit expense');
       }
 
+      if (customCategory) {
+        // Add the custom category to the list if it doesn't already exist.
+        if (!categoryList.some((cat) => cat.value === customCategory.value)) {
+          setCategoryList((prev) => [...prev, customCategory]);
+        }
+      }
+
       toaster.create({
         title: 'Sucesso',
         description: 'Despesa adicionada com sucesso!',
