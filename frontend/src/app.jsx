@@ -1,6 +1,6 @@
+import { Container, Heading, Image, HStack, Text } from '@chakra-ui/react';
 import ExpenseForm from './components/expense-form';
 import Login from './components/login';
-import { Container, Heading, Image, HStack, Text } from '@chakra-ui/react';
 import { Toaster } from './components/ui/toaster';
 import { UserInfo } from './components/user-info';
 import { useAuth } from './contexts/auth-context';

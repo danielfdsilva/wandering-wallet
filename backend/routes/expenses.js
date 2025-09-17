@@ -58,9 +58,10 @@ export default (doc) => {
         Categoria: category,
         Participantes: participants,
         Valor: amount,
-        Date: date,
+        Data: date,
         Notas: description,
-        Moeda: currency
+        Moeda: currency,
+        Autor: req.user.name,
       });
 
       // Add the category to the set if it doesn't exist.
