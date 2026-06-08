@@ -26,7 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useGoogleLogin({
     onSuccess: async (response) => {
-      const token = response.access_token;
+      const googleToken = response.access_token;
       const result = await fetch(
         `${import.meta.env.VITE_API_URL}/api/auth/verify-token`,
         {
@@ -34,7 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ token })
+          body: JSON.stringify({ token: googleToken })
         }
       );
 
@@ -43,20 +43,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       const data = await result.json();
-      setUser({ ...data.user, token });
-      localStorage.setItem('auth_token', token);
+      setUser({ ...data.user, token: data.sessionToken });
+      localStorage.setItem('session_token', data.sessionToken);
     },
     flow: 'implicit'
   });
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('auth_token');
+    localStorage.removeItem('session_token');
   };
 
   useEffect(() => {
-    const verifyStoredToken = async () => {
-      const token = localStorage.getItem('auth_token');
+    const verifyStoredSession = async () => {
+      const token = localStorage.getItem('session_token');
       if (!token) {
         setIsLoading(false);
         return;
@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       try {
         const result = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/auth/verify-token`,
+          `${import.meta.env.VITE_API_URL}/api/auth/verify-session`,
           {
             method: 'POST',
             headers: {
@@ -78,17 +78,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const data = await result.json();
           setUser({ ...data.user, token });
         } else {
-          localStorage.removeItem('auth_token');
+          localStorage.removeItem('session_token');
         }
       } catch (error) {
         // eslint-disable-next-line no-console
-        console.error('Token verification error:', error);
-        localStorage.removeItem('auth_token');
+        console.error('Session verification error:', error);
+        localStorage.removeItem('session_token');
       }
       setIsLoading(false);
     };
 
-    verifyStoredToken();
+    verifyStoredSession();
   }, []);
 
   const value = {
