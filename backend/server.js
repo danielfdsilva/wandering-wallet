@@ -23,8 +23,9 @@ const jwt = new JWT({
   scopes: SCOPES
 });
 
-// Initialize Google Sheets document
-const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEET_ID, jwt);
+const doc = process.env.GOOGLE_SHEET_ID
+  ? new GoogleSpreadsheet(process.env.GOOGLE_SHEET_ID, jwt)
+  : null;
 
 const app = express();
 app.use(cors());
@@ -33,10 +34,13 @@ app.use(express.json());
 // Setup route
 app.get('/api/setup', async (req, res) => {
   try {
+    if (doc && !doc.title) {
+      await doc.loadInfo();
+    }
     res.status(200).json({
       googleClientId: process.env.GOOGLE_CLIENT_ID,
       participants: appConfigData.participants.map((p) => p.name),
-      tripName: doc.title,
+      tripName: doc?.title ?? null,
       currencies: appConfigData.currencies,
       splits: appConfigData.splits
     });

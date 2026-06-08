@@ -7,6 +7,9 @@ const router = express.Router();
 
 const { googleServiceAccountData } = await initConfig();
 
+const NO_TRIP = (res) =>
+  res.status(503).json({ error: 'No active trip configured' });
+
 export default (doc) => {
   const docCategories = new Set();
   const refreshCategories = async () => {
@@ -36,12 +39,15 @@ export default (doc) => {
     }
   };
 
-  // Refresh categories on server start
-  refreshCategories();
-  // Set an interval to refresh categories every 2 minutes
-  setInterval(refreshCategories, 2 * 60 * 1000);
+  if (doc) {
+    // Refresh categories on server start
+    refreshCategories();
+    // Set an interval to refresh categories every 2 minutes
+    setInterval(refreshCategories, 2 * 60 * 1000);
+  }
 
   router.post('/', authenticateToken, async (req, res) => {
+    if (!doc) return NO_TRIP(res);
     try {
       const { amount, description, category, date, currency, participants } =
         req.body;
@@ -75,6 +81,8 @@ export default (doc) => {
   });
 
   router.get('/categories', authenticateToken, async (req, res) => {
+    if (!doc) return NO_TRIP(res);
+
     const catList = Array.from(docCategories).sort((a, b) =>
       a.localeCompare(b)
     );
