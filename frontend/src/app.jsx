@@ -5,6 +5,7 @@ import { Toaster } from './components/ui/toaster';
 import { UserInfo } from './components/user-info';
 import { useAuth } from './contexts/auth-context';
 import { useSetup } from './contexts/setup-context';
+import SplashScreen from './components/splash-screen';
 
 import bg from './ww-bg.png';
 import logo from './ww-logo.png';
@@ -13,15 +14,15 @@ function App() {
   const { user, isLoading } = useAuth();
   const setupInfo = useSetup();
 
-  if (isLoading) {
-    return null;
-  }
-
-  if (!user) {
-    return <Login />;
-  }
-
-  return (
+  const content = isLoading ? (
+    <SplashScreen>
+      <Text fontSize='lg' color='white'>
+        A verificar sessão...
+      </Text>
+    </SplashScreen>
+  ) : !user ? (
+    <Login />
+  ) : (
     <Container maxW='35rem' pb={8} pt={4}>
       <HStack
         as='header'
@@ -51,8 +52,14 @@ function App() {
         </Text>
       </Heading>
       <ExpenseForm />
-      <Toaster />
     </Container>
+  );
+
+  return (
+    <>
+      {content}
+      <Toaster />
+    </>
   );
 }
 
