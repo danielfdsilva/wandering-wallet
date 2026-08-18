@@ -12,33 +12,49 @@ interface ContextType {
   login: () => void;
   logout: () => void;
   isLoading: boolean;
+  loginError: string | null;
 }
 
 const AuthContext = createContext<ContextType>({
   user: null,
   login: () => {},
   logout: () => {},
-  isLoading: true
+  isLoading: true,
+  loginError: null
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   const login = useGoogleLogin({
     onSuccess: async (response) => {
-      const result = await apiFetch('/api/auth/verify-token', {
-        method: 'POST',
-        body: JSON.stringify({ token: response.access_token })
-      });
+      setLoginError(null);
+      try {
+        const result = await apiFetch('/api/auth/verify-token', {
+          method: 'POST',
+          body: JSON.stringify({ token: response.access_token })
+        });
 
-      if (!result.ok) {
-        throw new Error('Authentication failed');
+        if (!result.ok) {
+          setLoginError(
+            result.status === 403
+              ? 'Este email não está autorizado.'
+              : 'Não foi possível entrar. Tenta novamente.'
+          );
+          return;
+        }
+
+        const data = await result.json();
+        localStorage.setItem('session_token', data.sessionToken);
+        setUser({ ...data.user, token: data.sessionToken });
+      } catch {
+        setLoginError('Não foi possível entrar. Tenta novamente.');
       }
-
-      const data = await result.json();
-      setUser({ ...data.user, token: data.sessionToken });
-      localStorage.setItem('session_token', data.sessionToken);
+    },
+    onError: () => {
+      setLoginError('Não foi possível entrar. Tenta novamente.');
     },
     flow: 'implicit'
   });
@@ -83,7 +99,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     login,
     logout,
-    isLoading
+    isLoading,
+    loginError
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
