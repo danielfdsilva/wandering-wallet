@@ -1,4 +1,11 @@
-import { FormEventHandler, useEffect, useMemo, useState } from 'react';
+import {
+  FormEventHandler,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from 'react';
 import {
   Box,
   Button,
@@ -24,6 +31,7 @@ import { BiYen, BiEuro, BiDollar, BiPound } from 'react-icons/bi';
 import { toaster } from './ui/toaster';
 import { useSetup } from '../contexts/setup-context';
 import { apiFetch } from '../lib/api';
+import { applySplit, localDateString } from '../lib/expense-utils';
 
 const currencyIconMap = {
   jpy: <BiYen />,
@@ -80,34 +88,34 @@ export default function ExpenseForm() {
     }[]
   >([]);
 
-  useEffect(() => {
-    // Fetch categories from the API and set them in state
-    const fetchCategories = async () => {
-      try {
-        const response = await apiFetch('/api/expenses/categories');
-        if (!response.ok) {
-          throw new Error('Failed to fetch categories');
-        }
-        const data: string[] = await response.json();
-        const filteredCategories = data
-          .filter((cat) => !categories.some((c) => c.id === cat))
-          .map((cat) => ({
-            value: cat,
-            label: cat
-          }));
-
-        setCategoryList(filteredCategories);
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error('Error fetching categories:', error);
+  const fetchCategories = useCallback(async () => {
+    try {
+      const response = await apiFetch('/api/expenses/categories');
+      if (!response.ok) {
+        throw new Error('Failed to fetch categories');
       }
-    };
+      const data: string[] = await response.json();
+      const filteredCategories = data
+        .filter((cat) => !categories.some((c) => c.id === cat))
+        .map((cat) => ({
+          value: cat,
+          label: cat
+        }));
 
-    fetchCategories();
+      setCategoryList(filteredCategories);
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Error fetching categories:', error);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
 
   const [isSubmitting, setSubmitting] = useState(false);
   const [amount, setAmount] = useState('');
+  const originalAmountRef = useRef('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
   const [customCategory, setCustomCategory] = useState<{
@@ -115,8 +123,13 @@ export default function ExpenseForm() {
     value: string;
   } | null>(null);
   const [currency, setCurrency] = useState(setupInfo.currencies[0] || 'eur');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(localDateString());
   const [participants, setParticipants] = useState(defaultPeople);
+
+  const handleAmountChange = (value: string) => {
+    setAmount(value);
+    originalAmountRef.current = value;
+  };
 
   const handleCategoryClick = (catId: string) => {
     setCategory(catId);
@@ -135,16 +148,29 @@ export default function ExpenseForm() {
   };
 
   const handleSubmit: FormEventHandler<HTMLDivElement> = async (e) => {
-    if (isSubmitting) return; // Prevent multiple submissions
+    if (isSubmitting) return;
     e.preventDefault();
+    const parsedAmount = parseFloat(amount);
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      toaster.create({
+        title: 'Erro',
+        description: 'O valor tem de ser positivo.',
+        type: 'error',
+        duration: 3000,
+        closable: true
+      });
+      return;
+    }
+
     setSubmitting(true);
+    const submittedCategory = customCategory?.value || category;
     try {
       const response = await apiFetch('/api/expenses', {
         method: 'POST',
         body: JSON.stringify({
-          amount: parseFloat(amount),
+          amount: parsedAmount,
           description,
-          category: customCategory?.value || category,
+          category: submittedCategory,
           date,
           currency: currency.toLowerCase(),
           participants:
@@ -158,25 +184,21 @@ export default function ExpenseForm() {
         throw new Error('Failed to submit expense');
       }
 
-      if (customCategory) {
-        // Add the custom category to the list if it doesn't already exist.
-        if (!categoryList.some((cat) => cat.value === customCategory.value)) {
-          setCategoryList((prev) => [...prev, customCategory]);
-        }
-      }
+      await fetchCategories();
 
       toaster.create({
-        title: 'Sucesso',
-        description: 'Despesa adicionada com sucesso!',
+        title: 'Despesa adicionada',
+        description: `${parsedAmount.toFixed(2)} ${currency.toUpperCase()} · ${submittedCategory}`,
         type: 'success',
         duration: 3000,
         closable: true
       });
       setAmount('');
+      originalAmountRef.current = '';
       setDescription('');
       setCategory('');
       setCustomCategory(null);
-      setDate(new Date().toISOString().split('T')[0]);
+      setDate(localDateString());
       setParticipants(defaultPeople);
     } catch (error) {
       // eslint-disable-next-line no-console
@@ -192,6 +214,9 @@ export default function ExpenseForm() {
       setSubmitting(false);
     }
   };
+
+  const parsedAmount = parseFloat(amount);
+  const hasValidAmount = Number.isFinite(parsedAmount) && parsedAmount > 0;
 
   return (
     <Box>
@@ -231,6 +256,7 @@ export default function ExpenseForm() {
             <CreatableSelect
               size='lg'
               isClearable
+              placeholder='Categoria personalizada'
               menuPortalTarget={document.body}
               selectedOptionColorPalette='teal'
               chakraStyles={{
@@ -254,26 +280,23 @@ export default function ExpenseForm() {
                 type='number'
                 size='lg'
                 id='amount'
+                name='amount'
+                min={0.01}
                 step='0.01'
+                inputMode='decimal'
                 value={amount?.toString()}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) => handleAmountChange(e.target.value)}
                 placeholder='Valor despesa'
               />
               {validSplits.map((split) => (
                 <Button
                   key={split}
+                  type='button'
                   variant='outline'
                   fontSize='1.5rem'
                   size='lg'
                   onClick={() => {
-                    setAmount((prev) =>
-                      prev
-                        ? (
-                            parseFloat(prev) *
-                            splitsMap[split as keyof typeof splitsMap].value
-                          ).toFixed(2)
-                        : ''
-                    );
+                    setAmount(applySplit(originalAmountRef.current, split));
                   }}
                 >
                   {splitsMap[split as keyof typeof splitsMap].fraction}
@@ -286,7 +309,7 @@ export default function ExpenseForm() {
         <HStack width='full'>
           {setupInfo.currencies.length > 1 && (
             <Field.Root>
-              <Field.Label htmlFor='currency'>Currency</Field.Label>
+              <Field.Label htmlFor='currency'>Moeda</Field.Label>
               <SegmentGroup.Root
                 size='lg'
                 value={currency}
@@ -315,12 +338,13 @@ export default function ExpenseForm() {
           )}
 
           <Field.Root>
-            <Field.Label htmlFor='date'>Date</Field.Label>
+            <Field.Label htmlFor='date'>Data</Field.Label>
             <HStack gap={2} width='full'>
               <Input
                 type='date'
                 size='lg'
                 id='date'
+                name='date'
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
               />
@@ -329,10 +353,11 @@ export default function ExpenseForm() {
         </HStack>
 
         <Field.Root>
-          <Field.Label htmlFor='description'>Description</Field.Label>
+          <Field.Label htmlFor='description'>Descrição</Field.Label>
           <Input
             type='text'
             id='description'
+            name='description'
             size='lg'
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -380,7 +405,7 @@ export default function ExpenseForm() {
           loading={isSubmitting}
           disabled={
             (!category && !customCategory) ||
-            !amount ||
+            !hasValidAmount ||
             !date ||
             !participants?.length
           }
