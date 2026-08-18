@@ -41,12 +41,14 @@ This is the Node.js + Express backend for Wandering Wallet, responsible for hand
    GOOGLE_SERVICE_ACCOUNT_FILE=./google-service-account.json
    APP_CONFIG_FILE=./app-config.json
    JWT_SECRET=your_secret_here
+   FRONTEND_ORIGIN=http://localhost:5173
    ```
 
    - `GOOGLE_CLIENT_ID`: Your OAuth 2.0 Client ID
    - `GOOGLE_SHEET_ID`: The ID of the Google Sheet used to store expenses
    - `GOOGLE_SERVICE_ACCOUNT_FILE`: Path to your Google service account JSON file (alias: `GOOGLE_SERVICE_ACCOUNT_JSON`)
    - `APP_CONFIG_FILE`: Path to your backend config file (alias: `APP_CONFIG_PATH`)
+   - `FRONTEND_ORIGIN`: Frontend origin for CORS (e.g. `http://localhost:5173`)
    - `JWT_SECRET`: Secret used to sign session JWTs — generate one with:
      ```bash
      node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"

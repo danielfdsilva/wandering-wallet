@@ -10,6 +10,7 @@ services:
       - GOOGLE_CLIENT_ID=your_oauth_client_id_here
       - GOOGLE_SHEET_ID=your_google_sheet_id_here
       - JWT_SECRET=change_me_generate_a_long_random_string
+      - FRONTEND_ORIGIN=http://localhost:3000
     volumes:
       - ./backend/app-config.json:/app/app-config.json:ro
       - ./backend/client_secret.json:/app/client_secret.json:ro

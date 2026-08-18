@@ -105,6 +105,7 @@ If you don't use nvm, ensure you have Node.js 24 or higher installed manually.
    GOOGLE_CLIENT_ID=your_oauth_client_id_here
    GOOGLE_SHEET_ID=your_google_sheet_id_here
    JWT_SECRET=your_secret_here
+   FRONTEND_ORIGIN=http://localhost:5173
    ```
 
    - `APP_CONFIG_FILE`: Path to your backend config file (e.g., `./app-config.json`). Alias: `APP_CONFIG_PATH`
@@ -112,6 +113,7 @@ If you don't use nvm, ensure you have Node.js 24 or higher installed manually.
    - `GOOGLE_CLIENT_ID`: Your OAuth 2.0 Client ID
    - `GOOGLE_SHEET_ID`: The ID of the Google Sheet used to store expenses
    - `JWT_SECRET`: Secret used to sign session JWTs
+   - `FRONTEND_ORIGIN`: Frontend origin for CORS (e.g. `http://localhost:5173`)
 
 For more details, see [backend/README.md](backend/README.md).
 
@@ -174,7 +176,7 @@ You can run the entire application using Docker Compose.
    - `app-config.json` (your backend configuration)
    - `client_secret.json` (your Google service account credentials)
 
-2. Edit `docker-compose.yml` to set `GOOGLE_CLIENT_ID`, `GOOGLE_SHEET_ID`, and `JWT_SECRET`.
+2. Edit `docker-compose.yml` to set `GOOGLE_CLIENT_ID`, `GOOGLE_SHEET_ID`, `JWT_SECRET`, and `FRONTEND_ORIGIN`.
 
 3. Start the services:
    ```bash
@@ -195,6 +197,7 @@ The backend service uses:
 - `GOOGLE_CLIENT_ID`: Your OAuth 2.0 Client ID
 - `GOOGLE_SHEET_ID`: The ID of the Google Sheet used to store expenses
 - `JWT_SECRET`: Secret used to sign session JWTs
+- `FRONTEND_ORIGIN`: Frontend origin for CORS (e.g., `http://localhost:3000`)
 
 For custom deployments or advanced usage, you can still use Docker directly as described below.
 

@@ -37,7 +37,16 @@ async function start() {
   sheetStatus.configured = Boolean(doc);
 
   const app = express();
-  app.use(cors());
+  const corsOrigins = (process.env.FRONTEND_ORIGIN || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  app.use(
+    cors({
+      origin: corsOrigins.length ? corsOrigins : true
+    })
+  );
   app.use(morgan('tiny'));
   app.use(express.json());
 
