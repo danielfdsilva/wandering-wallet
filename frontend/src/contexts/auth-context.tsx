@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useGoogleLogin } from '@react-oauth/google';
+import { apiFetch } from '../lib/api';
 
 interface ContextType {
   user: {
@@ -26,17 +27,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useGoogleLogin({
     onSuccess: async (response) => {
-      const googleToken = response.access_token;
-      const result = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/auth/verify-token`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ token: googleToken })
-        }
-      );
+      const result = await apiFetch('/api/auth/verify-token', {
+        method: 'POST',
+        body: JSON.stringify({ token: response.access_token })
+      });
 
       if (!result.ok) {
         throw new Error('Authentication failed');
@@ -63,16 +57,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       try {
-        const result = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/auth/verify-session`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ token })
-          }
-        );
+        const result = await apiFetch('/api/auth/verify-session', {
+          method: 'POST',
+          body: JSON.stringify({ token })
+        });
 
         if (result.ok) {
           const data = await result.json();

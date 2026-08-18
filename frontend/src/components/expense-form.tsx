@@ -1,5 +1,4 @@
 import { FormEventHandler, useEffect, useMemo, useState } from 'react';
-import { useAuth } from '../contexts/auth-context';
 import {
   Box,
   Button,
@@ -24,6 +23,7 @@ import {
 import { BiYen, BiEuro, BiDollar, BiPound } from 'react-icons/bi';
 import { toaster } from './ui/toaster';
 import { useSetup } from '../contexts/setup-context';
+import { apiFetch } from '../lib/api';
 
 const currencyIconMap = {
   jpy: <BiYen />,
@@ -56,7 +56,6 @@ const categories = [
 ];
 
 export default function ExpenseForm() {
-  const { user } = useAuth();
   const setupInfo = useSetup();
 
   const validSplits = setupInfo.splits.filter(
@@ -85,14 +84,7 @@ export default function ExpenseForm() {
     // Fetch categories from the API and set them in state
     const fetchCategories = async () => {
       try {
-        const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/expenses/categories`,
-          {
-            headers: {
-              Authorization: `Bearer ${user?.token}`
-            }
-          }
-        );
+        const response = await apiFetch('/api/expenses/categories');
         if (!response.ok) {
           throw new Error('Failed to fetch categories');
         }
@@ -147,27 +139,20 @@ export default function ExpenseForm() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/expenses`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${user?.token}`
-          },
-          body: JSON.stringify({
-            amount: parseFloat(amount),
-            description,
-            category: customCategory?.value || category,
-            date,
-            currency: currency.toLowerCase(),
-            participants:
-              participants.length === setupInfo.participants.length
-                ? 'Ambos'
-                : participants[0]
-          })
-        }
-      );
+      const response = await apiFetch('/api/expenses', {
+        method: 'POST',
+        body: JSON.stringify({
+          amount: parseFloat(amount),
+          description,
+          category: customCategory?.value || category,
+          date,
+          currency: currency.toLowerCase(),
+          participants:
+            participants.length === setupInfo.participants.length
+              ? 'Ambos'
+              : participants[0]
+        })
+      });
 
       if (!response.ok) {
         throw new Error('Failed to submit expense');

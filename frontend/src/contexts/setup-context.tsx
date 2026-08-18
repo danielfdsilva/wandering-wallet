@@ -1,6 +1,7 @@
 import { Text } from '@chakra-ui/react';
 import { createContext, useContext, useEffect, useState } from 'react';
 import SplashScreen from '../components/splash-screen';
+import { apiFetch } from '../lib/api';
 
 interface SetupContextType {
   googleClientId: string;
@@ -37,9 +38,7 @@ export function SetupProvider({
       setIsLoading(true);
       setError(null);
       try {
-        const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/setup`
-        );
+        const response = await apiFetch('/api/setup');
         const data = await response.json();
 
         if (!response.ok) {
