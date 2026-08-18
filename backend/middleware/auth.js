@@ -1,9 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { initConfig } from '../config.js';
 
-const { appConfigData } = await initConfig();
-const allowedEmails = appConfigData.participants.map(p => p.email);
-
 const JWT_SECRET = process.env.JWT_SECRET;
 const SESSION_DURATION = '30d';
 
@@ -33,6 +30,8 @@ export const verifyGoogleToken = async (token) => {
   }
 
   const userInfo = await userInfoRes.json();
+  const { appConfigData } = await initConfig();
+  const allowedEmails = appConfigData.participants.map((p) => p.email);
 
   if (!allowedEmails.includes(userInfo.email)) {
     throw new StatusError(403, 'Email not authorized');
@@ -61,7 +60,7 @@ export const verifySessionToken = (token) => {
 export const verifyToken = verifyGoogleToken;
 
 export const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
+  const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(' ')[1];
 
   try {
