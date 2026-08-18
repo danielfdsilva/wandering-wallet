@@ -5,8 +5,8 @@ services:
       dockerfile: Dockerfile
     environment:
       - PORT=3001
-      - APP_CONFIG_PATH=./app-config.json
-      - GOOGLE_SERVICE_ACCOUNT_JSON=./client_secret.json
+      - APP_CONFIG_FILE=/app/app-config.json
+      - GOOGLE_SERVICE_ACCOUNT_FILE=/app/client_secret.json
       - GOOGLE_CLIENT_ID=your_oauth_client_id_here
     volumes:
       - ./backend/app-config.json:/app/app-config.json:ro

@@ -30,7 +30,7 @@ This is the Node.js + Express backend for Wandering Wallet, responsible for hand
 
 4. Create a `.env` file from the example:
    ```bash
-   cp example.env .env
+   cp .env.example .env
    ```
 
 5. Edit `.env` to set the following variables:
@@ -45,8 +45,8 @@ This is the Node.js + Express backend for Wandering Wallet, responsible for hand
 
    - `GOOGLE_CLIENT_ID`: Your OAuth 2.0 Client ID
    - `GOOGLE_SHEET_ID`: The ID of the Google Sheet used to store expenses
-   - `GOOGLE_SERVICE_ACCOUNT_FILE`: Path to your Google service account JSON file
-   - `APP_CONFIG_FILE`: Path to your backend config file (e.g., `./app-config.json`)
+   - `GOOGLE_SERVICE_ACCOUNT_FILE`: Path to your Google service account JSON file (alias: `GOOGLE_SERVICE_ACCOUNT_JSON`)
+   - `APP_CONFIG_FILE`: Path to your backend config file (alias: `APP_CONFIG_PATH`)
    - `JWT_SECRET`: Secret used to sign session tokens — generate one with:
      ```bash
      node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"

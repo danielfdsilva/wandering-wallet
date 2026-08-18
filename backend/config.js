@@ -1,19 +1,30 @@
 import { readFile } from 'fs/promises';
 import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { dirname, isAbsolute, join } from 'path';
 import dotenv from 'dotenv';
+import { resolveConfigPaths } from './lib/config-env.js';
 
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const { GOOGLE_SERVICE_ACCOUNT_FILE, APP_CONFIG_FILE } = process.env;
-
 let googleServiceAccountData = null;
 let appConfigData = null;
 
+function resolveFromBackend(filePath) {
+  return isAbsolute(filePath) ? filePath : join(__dirname, filePath);
+}
+
 export async function initConfig() {
+  const { appConfig, serviceAccount } = resolveConfigPaths();
+
+  if (!appConfig || !serviceAccount) {
+    throw new Error(
+      'Missing config paths. Set APP_CONFIG_FILE (or APP_CONFIG_PATH) and GOOGLE_SERVICE_ACCOUNT_FILE (or GOOGLE_SERVICE_ACCOUNT_JSON).'
+    );
+  }
+
   if (googleServiceAccountData && appConfigData) {
     return {
       googleServiceAccountData,
@@ -23,10 +34,10 @@ export async function initConfig() {
 
   try {
     googleServiceAccountData = JSON.parse(
-      await readFile(join(__dirname, GOOGLE_SERVICE_ACCOUNT_FILE), 'utf8')
+      await readFile(resolveFromBackend(serviceAccount), 'utf8')
     );
     appConfigData = JSON.parse(
-      await readFile(join(__dirname, APP_CONFIG_FILE), 'utf8')
+      await readFile(resolveFromBackend(appConfig), 'utf8')
     );
   } catch (error) {
     console.error('Error reading configuration files:', error);

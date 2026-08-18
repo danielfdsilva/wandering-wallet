@@ -94,19 +94,19 @@ If you don't use nvm, ensure you have Node.js 24 or higher installed manually.
 
 5. Create a `.env` file from the example:
    ```bash
-   cp example.env .env
+   cp .env.example .env
    ```
 
 6. Edit `.env` to set the following variables (use file paths for config and credentials):
    ```
    PORT=3001
-   APP_CONFIG_PATH=./app-config.json
-   GOOGLE_SERVICE_ACCOUNT_JSON=./client_secret_xxx.json
+   APP_CONFIG_FILE=./app-config.json
+   GOOGLE_SERVICE_ACCOUNT_FILE=./client_secret_xxx.json
    GOOGLE_CLIENT_ID=your_oauth_client_id_here
    ```
 
-   - `APP_CONFIG_PATH`: Path to your backend config file (e.g., `./app-config.json`)
-   - `GOOGLE_SERVICE_ACCOUNT_JSON`: Path to your Google service account JSON file
+   - `APP_CONFIG_FILE`: Path to your backend config file (e.g., `./app-config.json`). Alias: `APP_CONFIG_PATH`
+   - `GOOGLE_SERVICE_ACCOUNT_FILE`: Path to your Google service account JSON file. Alias: `GOOGLE_SERVICE_ACCOUNT_JSON`
    - `GOOGLE_CLIENT_ID`: Your OAuth 2.0 Client ID
 
 For more details, see [backend/README.md](backend/README.md).
@@ -186,8 +186,8 @@ The backend service mounts `app-config.json` and `client_secret.json` as read-on
 
 The backend service uses:
 - `PORT`: The port to run the server (default: 3001)
-- `APP_CONFIG_PATH`: Path to your backend config file (e.g., `/app/app-config.json`)
-- `GOOGLE_SERVICE_ACCOUNT_JSON`: Path to your Google service account JSON file (e.g., `/app/client_secret.json`)
+- `APP_CONFIG_FILE`: Path to your backend config file (e.g., `/app/app-config.json`)
+- `GOOGLE_SERVICE_ACCOUNT_FILE`: Path to your Google service account JSON file (e.g., `/app/client_secret.json`)
 - `GOOGLE_CLIENT_ID`: Your OAuth 2.0 Client ID
 
 For custom deployments or advanced usage, you can still use Docker directly as described below.
