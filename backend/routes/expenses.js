@@ -3,6 +3,9 @@ import { authenticateToken } from '../middleware/auth.js';
 import { initConfig } from '../config.js';
 import { validateExpense } from '../lib/validate-expense.js';
 import { sheetStatus } from '../lib/sheet-status.js';
+import {
+  firstAvailableSheetRow
+} from '../lib/sheet-rows.js';
 
 const router = express.Router();
 
@@ -66,9 +69,10 @@ export default (doc) => {
 
       // Get the first sheet
       const sheet = doc.sheetsByIndex[0];
+      await sheet.loadHeaderRow();
 
-      // Add the expense row
-      await sheet.addRow({
+      const rowValues = {
+        // A timestamp is mandatory.
         Timestamp: Date.now(),
         Categoria: category,
         Participantes: participants,
@@ -77,7 +81,30 @@ export default (doc) => {
         Notas: description,
         Moeda: currency,
         Autor: req.user.name
+      };
+
+      // addRow appends after the used range and skips empty rows in between.
+      // Column A is Timestamp; first blank cell from row 2 is the next slot.
+      const occupied = await sheet.getCellsInRange('A2:A5000');
+      const sheetRow = firstAvailableSheetRow(occupied);
+
+      if (sheetRow > sheet.rowCount) {
+        await sheet.resize({ rowCount: sheetRow });
+      }
+
+      // Write into that row (0-based indexes for the cells API)
+      await sheet.loadCells({
+        startRowIndex: sheetRow - 1,
+        endRowIndex: sheetRow,
+        startColumnIndex: 0,
+        endColumnIndex: sheet.headerValues.length
       });
+
+      sheet.headerValues.forEach((header, colIndex) => {
+        if (rowValues[header] === undefined) return;
+        sheet.getCell(sheetRow - 1, colIndex).value = rowValues[header];
+      });
+      await sheet.saveUpdatedCells();
 
       // Add the category to the set if it doesn't exist.
       docCategories.add(category);
