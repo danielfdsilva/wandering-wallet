@@ -1,6 +1,7 @@
 import express from 'express';
 import { authenticateToken } from '../middleware/auth.js';
 import { initConfig } from '../config.js';
+import { validateExpense } from '../lib/validate-expense.js';
 import { sheetStatus } from '../lib/sheet-status.js';
 
 const router = express.Router();
@@ -51,9 +52,14 @@ export default (doc) => {
 
   router.post('/', authenticateToken, async (req, res) => {
     if (!doc) return NO_TRIP(res);
+    const parsed = validateExpense(req.body);
+    if (!parsed.ok) {
+      return res.status(400).json({ error: parsed.error });
+    }
+
     try {
       const { amount, description, category, date, currency, participants } =
-        req.body;
+        parsed.value;
 
       // Load the document
       await doc.loadInfo();
