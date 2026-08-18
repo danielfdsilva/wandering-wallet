@@ -1,11 +1,9 @@
-// backend/routes/expenses.js
 import express from 'express';
 import { authenticateToken } from '../middleware/auth.js';
 import { initConfig } from '../config.js';
+import { sheetStatus } from '../lib/sheet-status.js';
 
 const router = express.Router();
-
-const { googleServiceAccountData } = await initConfig();
 
 const NO_TRIP = (res) =>
   res.status(503).json({ error: 'No active trip configured' });
@@ -18,28 +16,33 @@ export default (doc) => {
       const sheet = doc.sheetsByIndex[0];
       const cells = await sheet.getCellsInRange('B2:B1000');
       (cells || []).flat().forEach((cell) => docCategories.add(cell));
+      sheetStatus.ok = true;
+      sheetStatus.error = null;
     } catch (error) {
+      sheetStatus.ok = false;
+      sheetStatus.error = error.message;
       if (error.message.includes('The caller does not have permission')) {
-        console.log('\nUnauthorized access to Google Sheet.');
-        console.log(
+        const { googleServiceAccountData } = await initConfig();
+        console.error('\nUnauthorized access to Google Sheet.');
+        console.error(
           'Make sure the Google Service Account bot has the needed access.'
         );
-        console.log('Share the Sheet with:');
-        console.log('');
-        console.log('  Bot email:', googleServiceAccountData.client_email);
-        console.log(
+        console.error('Share the Sheet with:');
+        console.error('');
+        console.error('  Bot email:', googleServiceAccountData.client_email);
+        console.error(
           '  Sheet URL:',
           `https://docs.google.com/spreadsheets/d/${process.env.GOOGLE_SHEET_ID}`,
           '\n'
         );
-
-        process.exit(1);
+        return;
       }
       console.error('Error refreshing categories:', error);
     }
   };
 
   if (doc) {
+    sheetStatus.configured = true;
     // Refresh categories on server start
     refreshCategories();
     // Set an interval to refresh categories every 2 minutes
@@ -67,15 +70,19 @@ export default (doc) => {
         Data: date,
         Notas: description,
         Moeda: currency,
-        Autor: req.user.name,
+        Autor: req.user.name
       });
 
       // Add the category to the set if it doesn't exist.
       docCategories.add(category);
+      sheetStatus.ok = true;
+      sheetStatus.error = null;
 
       res.status(200).json({ message: 'Expense added successfully' });
     } catch (error) {
       console.error('Error:', error);
+      sheetStatus.ok = false;
+      sheetStatus.error = error.message;
       res.status(500).json({ error: 'Failed to add expense' });
     }
   });

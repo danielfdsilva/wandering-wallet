@@ -8,6 +8,8 @@ services:
       - APP_CONFIG_FILE=/app/app-config.json
       - GOOGLE_SERVICE_ACCOUNT_FILE=/app/client_secret.json
       - GOOGLE_CLIENT_ID=your_oauth_client_id_here
+      - GOOGLE_SHEET_ID=your_google_sheet_id_here
+      - JWT_SECRET=change_me_generate_a_long_random_string
     volumes:
       - ./backend/app-config.json:/app/app-config.json:ro
       - ./backend/client_secret.json:/app/client_secret.json:ro

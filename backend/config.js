@@ -32,19 +32,21 @@ export async function initConfig() {
         await readFile(resolveFromBackend(serviceAccount), 'utf8')
       );
     } catch (error) {
-      console.error('Error reading configuration files:', error);
-      process.exit(1);
+      throw new Error(
+        `Failed to read Google service account file: ${error.message}`
+      );
     }
   }
 
+  let appConfigData;
   try {
-    const appConfigData = await appConfigStore.get(resolveFromBackend(appConfig));
-    return {
-      googleServiceAccountData,
-      appConfigData
-    };
+    appConfigData = await appConfigStore.get(resolveFromBackend(appConfig));
   } catch (error) {
-    console.error('Error reading configuration files:', error);
-    process.exit(1);
+    throw new Error(`Failed to read app config file: ${error.message}`);
   }
+
+  return {
+    googleServiceAccountData,
+    appConfigData
+  };
 }
