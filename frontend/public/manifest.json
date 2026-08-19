@@ -1,12 +1,12 @@
 {
   "name": "Wandering Wallet",
-  "short_name": "Wallet",
+  "short_name": "Wandering Wallet",
   "description": "Registo de despesas de viagem.",
   "display": "standalone",
   "start_url": "/",
   "scope": "/",
-  "theme_color": "#008080",
-  "background_color": "#008080",
+  "theme_color": "#863DA9",
+  "background_color": "#863DA9",
   "icons": [
     {
       "src": "/meta/36x36.png",
