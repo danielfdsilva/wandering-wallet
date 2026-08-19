@@ -21,11 +21,15 @@ While planning a trip with my partner, we needed a simple way to keep track of o
 ## Project Structure
 
 ```
-trip-expenses/
-├── frontend/           # React + Vite frontend
-├── backend/           # Node.js + Express backend
-└── Dockerfile         # Multi-stage Docker build file
+wandering-wallet/
+├── .env.example              # copy to .env (gitignored)
+├── app-config.example.json   # copy to app-config.json (gitignored)
+├── frontend/                 # React + Vite
+├── backend/                  # Node.js + Express
+└── docker-compose.yml
 ```
+
+All machine-local config lives at the **repo root**: `.env`, `app-config.json`, `google-service-account.json`. Do not edit `docker-compose.yml` for secrets or URLs.
 
 ## Prerequisites
 
@@ -74,85 +78,46 @@ If you don't use nvm, ensure you have Node.js 24 or higher installed manually.
    - Add your application's redirect URI (e.g., http://localhost:5173 for development)
    - Note down the Client ID
 
-### 2. Backend Setup
+### 3. App config (repo root)
 
-1. Navigate to the backend directory:
-   ```bash
-   cd backend
-   ```
+All of this stays on your machine — it is gitignored.
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+```bash
+cp .env.example .env
+cp app-config.example.json app-config.json
+```
 
-3. Create a configuration file:
-   - Copy `app-config-example.json` to `app-config.json`
-   - Edit `app-config.json` to set your Google Sheet ID, allowed emails, and other settings
+1. Put the Google service-account JSON at **`./google-service-account.json`**.
+2. Edit `app-config.json`: participant names + Google emails, currencies, splits (`1/2`, `2/3`, `2/5`).
+3. Edit `.env`:
 
-4. Prepare your Google Service Account credentials file (downloaded from Google Cloud Console).
+```
+PORT=3001
+APP_CONFIG_FILE=./app-config.json
+GOOGLE_SERVICE_ACCOUNT_FILE=./google-service-account.json
+GOOGLE_CLIENT_ID=your_oauth_client_id_here
+GOOGLE_SHEET_ID=your_google_sheet_id_here
+JWT_SECRET=your_secret_here
+FRONTEND_ORIGIN=http://localhost:5173
+VITE_BASE_URL=http://localhost:5173
+VITE_API_URL=http://localhost:3001
+```
 
-5. Create a `.env` file from the example:
-   ```bash
-   cp .env.example .env
-   ```
+- `JWT_SECRET`: generate with `node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"`
+- `FRONTEND_ORIGIN`: CORS origin (`http://localhost:5173` for Vite, `http://localhost:3000` for Docker UI)
+- `VITE_*`: baked into the frontend at build time. For Docker on this host use `VITE_BASE_URL=http://localhost:3000` and `VITE_API_URL=http://localhost:3001`
 
-6. Edit `.env` to set the following variables (use file paths for config and credentials):
-   ```
-   PORT=3001
-   APP_CONFIG_FILE=./app-config.json
-   GOOGLE_SERVICE_ACCOUNT_FILE=./client_secret_xxx.json
-   GOOGLE_CLIENT_ID=your_oauth_client_id_here
-   GOOGLE_SHEET_ID=your_google_sheet_id_here
-   JWT_SECRET=your_secret_here
-   FRONTEND_ORIGIN=http://localhost:5173
-   ```
+### 4. Local install
 
-   - `APP_CONFIG_FILE`: Path to your backend config file (e.g., `./app-config.json`). Alias: `APP_CONFIG_PATH`
-   - `GOOGLE_SERVICE_ACCOUNT_FILE`: Path to your Google service account JSON file. Alias: `GOOGLE_SERVICE_ACCOUNT_JSON`
-   - `GOOGLE_CLIENT_ID`: Your OAuth 2.0 Client ID
-   - `GOOGLE_SHEET_ID`: The ID of the Google Sheet used to store expenses
-   - `JWT_SECRET`: Secret used to sign session JWTs
-   - `FRONTEND_ORIGIN`: Frontend origin for CORS (e.g. `http://localhost:5173`)
-
-For more details, see [backend/README.md](backend/README.md).
-
-### 3. Frontend Setup
-
-1. Navigate to the frontend directory:
-   ```bash
-   cd frontend
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Create `.env` file:
-   ```bash
-   cp .env.example .env
-   ```
-
-4. Update `.env` with your configuration:
-   ```
-   VITE_API_URL=http://localhost:3001
-   ```
+```bash
+cd backend && npm install && cd ../frontend && npm install
+```
 
 ## Running the Application
 
-1. Start the backend server (in the backend directory):
-   ```bash
-   npm run dev
-   ```
-
-2. Start the frontend development server (in the frontend directory):
-   ```bash
-   npm run dev
-   ```
-
-3. Access the application at `http://localhost:5173`
-4. Sign in using your Google account (must be an authorized email)
+From `backend/`: `npm run dev` (reads root `.env`).  
+From `frontend/`: `npm run dev` (same).  
+Open http://localhost:5173 and sign in with an allowed Google account.
 
 ## Usage
 
@@ -170,37 +135,28 @@ For more details, see [backend/README.md](backend/README.md).
 
 ## Docker Compose Deployment
 
-You can run the entire application using Docker Compose.
+Config is **not** in `docker-compose.yml`. After `git pull`, only root `.env` / JSON files matter.
 
-1. Make sure you have the following files in the backend directory:
-   - `app-config.json` (your backend configuration)
-   - `client_secret.json` (your Google service account credentials)
-
-2. Edit `docker-compose.yml` to set `GOOGLE_CLIENT_ID`, `GOOGLE_SHEET_ID`, `JWT_SECRET`, and `FRONTEND_ORIGIN`.
-
-3. Start the services:
+1. Same three files as local setup, at the repo root:
+   - `.env`
+   - `app-config.json`
+   - `google-service-account.json`
+2. For the Docker UI on this machine, set in `.env`:
+   ```
+   FRONTEND_ORIGIN=http://localhost:3000
+   VITE_BASE_URL=http://localhost:3000
+   VITE_API_URL=http://localhost:3001
+   ```
+3. Start:
    ```bash
    docker compose up --build
    ```
 
-- The backend will be available at `http://localhost:3001`
-- The frontend will be available at `http://localhost:3000`
+- Frontend: http://localhost:3000
+- Backend: http://localhost:3001
 
-The backend service mounts `app-config.json` and `client_secret.json` as read-only volumes and uses environment variables for configuration.
-
-### Environment Variables
-
-The backend service uses:
-- `PORT`: The port to run the server (default: 3001)
-- `APP_CONFIG_FILE`: Path to your backend config file (e.g., `/app/app-config.json`)
-- `GOOGLE_SERVICE_ACCOUNT_FILE`: Path to your Google service account JSON file (e.g., `/app/client_secret.json`)
-- `GOOGLE_CLIENT_ID`: Your OAuth 2.0 Client ID
-- `GOOGLE_SHEET_ID`: The ID of the Google Sheet used to store expenses
-- `JWT_SECRET`: Secret used to sign session JWTs
-- `FRONTEND_ORIGIN`: Frontend origin for CORS (e.g., `http://localhost:3000`)
-
-For custom deployments or advanced usage, you can still use Docker directly as described below.
+Changing `VITE_*` requires a rebuild (`--build`). Other env vars apply on container restart.
 
 ## Docker Deployment
 
-You can also run the backend or frontend individually using Docker. See the `docker-compose.yml` and service Dockerfiles for details.
+You can also run the backend or frontend individually using Docker. See `docker-compose.yml` and the service Dockerfiles.

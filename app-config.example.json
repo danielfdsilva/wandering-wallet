@@ -1,0 +1,10 @@
+{
+  "participants": [
+    {
+      "name": "User",
+      "email": "user@gmail.com"
+    }
+  ],
+  "currencies": ["EUR", "USD"],
+  "splits": ["1/2", "2/3"]
+}

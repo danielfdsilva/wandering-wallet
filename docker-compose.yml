@@ -3,17 +3,15 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    env_file:
+      - .env
     environment:
-      - PORT=3001
-      - APP_CONFIG_FILE=/app/app-config.json
-      - GOOGLE_SERVICE_ACCOUNT_FILE=/app/client_secret.json
-      - GOOGLE_CLIENT_ID=your_oauth_client_id_here
-      - GOOGLE_SHEET_ID=your_google_sheet_id_here
-      - JWT_SECRET=change_me_generate_a_long_random_string
-      - FRONTEND_ORIGIN=http://localhost:3000
+      PORT: "3001"
+      APP_CONFIG_FILE: /app/app-config.json
+      GOOGLE_SERVICE_ACCOUNT_FILE: /app/google-service-account.json
     volumes:
-      - ./backend/app-config.json:/app/app-config.json:ro
-      - ./backend/client_secret.json:/app/client_secret.json:ro
+      - ./app-config.json:/app/app-config.json:ro
+      - ./google-service-account.json:/app/google-service-account.json:ro
     ports:
       - "3001:3001"
     restart: unless-stopped
@@ -23,8 +21,8 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        - VITE_BASE_URL=https://url.com
-        - VITE_API_URL=https://url.com
+        VITE_BASE_URL: ${VITE_BASE_URL}
+        VITE_API_URL: ${VITE_API_URL}
     ports:
       - "3000:80"
     depends_on:

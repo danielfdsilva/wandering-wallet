@@ -1,4 +1,4 @@
-import dotenv from 'dotenv';
+import './load-env.js';
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
@@ -9,8 +9,6 @@ import authRoutes from './routes/auth.js';
 import createExpensesRouter from './routes/expenses.js';
 import { initConfig } from './config.js';
 import { sheetStatus } from './lib/sheet-status.js';
-
-dotenv.config();
 
 async function start() {
   if (!process.env.JWT_SECRET) {

@@ -1,8 +1,13 @@
+import { dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
+const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+
 export default defineConfig({
+  envDir: repoRoot,
   plugins: [
     react(),
     VitePWA({

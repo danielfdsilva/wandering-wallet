@@ -1,35 +1,30 @@
 import { readFile, stat } from 'fs/promises';
-import { fileURLToPath } from 'url';
-import { dirname, isAbsolute, join } from 'path';
-import dotenv from 'dotenv';
-import { resolveConfigPaths } from './lib/config-env.js';
+import { repoRoot } from './load-env.js';
+import {
+  resolveConfigFilePath,
+  resolveConfigPaths
+} from './lib/config-env.js';
 import { createAppConfigStore } from './lib/app-config-store.js';
-
-dotenv.config();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 let googleServiceAccountData = null;
 const appConfigStore = createAppConfigStore({ readFile, stat });
-
-function resolveFromBackend(filePath) {
-  return isAbsolute(filePath) ? filePath : join(__dirname, filePath);
-}
 
 export async function initConfig() {
   const { appConfig, serviceAccount } = resolveConfigPaths();
 
   if (!appConfig || !serviceAccount) {
     throw new Error(
-      'Missing config paths. Set APP_CONFIG_FILE (or APP_CONFIG_PATH) and GOOGLE_SERVICE_ACCOUNT_FILE (or GOOGLE_SERVICE_ACCOUNT_JSON).'
+      'Missing config paths. Set APP_CONFIG_FILE and GOOGLE_SERVICE_ACCOUNT_FILE.'
     );
   }
+
+  const appConfigPath = resolveConfigFilePath(appConfig, repoRoot);
+  const serviceAccountPath = resolveConfigFilePath(serviceAccount, repoRoot);
 
   if (!googleServiceAccountData) {
     try {
       googleServiceAccountData = JSON.parse(
-        await readFile(resolveFromBackend(serviceAccount), 'utf8')
+        await readFile(serviceAccountPath, 'utf8')
       );
     } catch (error) {
       throw new Error(
@@ -40,7 +35,7 @@ export async function initConfig() {
 
   let appConfigData;
   try {
-    appConfigData = await appConfigStore.get(resolveFromBackend(appConfig));
+    appConfigData = await appConfigStore.get(appConfigPath);
   } catch (error) {
     throw new Error(`Failed to read app config file: ${error.message}`);
   }

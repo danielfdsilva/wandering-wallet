@@ -6,7 +6,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-# Copy source code and service account key
+# Copy source code
 COPY . .
 
 # Expose port
