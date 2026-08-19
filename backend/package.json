@@ -2,7 +2,7 @@
   "name": "wandering-wallet-backend",
   "description": "Backend for the Wandering Wallet application, a trip expenses tracker.",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "main": "server.js",
   "type": "module",
   "scripts": {

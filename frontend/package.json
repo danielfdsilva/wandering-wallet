@@ -1,7 +1,7 @@
 {
   "name": "wandering-wallet-frontend",
   "description": "Frontend for the Wandering Wallet application, a trip expenses tracker.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "license": "MIT",
